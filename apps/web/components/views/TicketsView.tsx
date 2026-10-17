@@ -19,7 +19,7 @@ import {
 import { useApp } from "@/lib/app-context";
 
 export function TicketsView() {
-  const { cur, tickets, setTickets } = useApp();
+  const { cur, tickets, setTickets, saveState } = useApp();
   const [T, setT] = useState<Ticket[]>([]);
   const [tf, setTf] = useState<"all" | TicketStatus>("all");
   const [armed, setArmed] = useState<string | null>(null);
@@ -29,6 +29,7 @@ export function TicketsView() {
   const ticketsRef = useRef(tickets);
   const Tref = useRef(T);
   const tfRef = useRef(tf);
+  const dirty = useRef(false);
   const armTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
@@ -58,10 +59,19 @@ export function TicketsView() {
   const saveT = () => {
     tPend.current = false;
     setTickets(Tref.current.filter(usedTicket));
-    flashSaved();
   };
   const saveRef = useRef(saveT);
   saveRef.current = saveT;
+
+  useEffect(() => {
+    if (saveState.tickets === "saved") flashSaved();
+    else if (saveState.tickets === "error" && tsaved.current) {
+      tsaved.current.textContent = "Not saved";
+      tsaved.current.style.opacity = "1";
+    } else if (saveState.tickets === "saving" && tsaved.current) {
+      tsaved.current.textContent = "Saved";
+    }
+  }, [saveState.tickets]);
 
   const queueT = () => {
     tPend.current = true;
@@ -80,10 +90,17 @@ export function TicketsView() {
   useEffect(() => {
     if (cur === "tickets") {
       flushT();
+      dirty.current = false;
       setT(ticketsRef.current);
     }
      
   }, [cur]);
+
+  /* adopt freshly fetched tickets until the user edits */
+  useEffect(() => {
+    if (cur === "tickets" && !dirty.current) setT(ticketsRef.current);
+     
+  }, [tickets, cur]);
 
   useEffect(() => {
     const onHide = () => {
@@ -123,6 +140,7 @@ export function TicketsView() {
   }, [cur]);
 
   const addTicket = () => {
+    dirty.current = true;
     const t: Ticket = {
       id: newTicketId(),
       key: "",
@@ -140,6 +158,7 @@ export function TicketsView() {
   };
 
   const update = (id: string, field: keyof Ticket, v: string) => {
+    dirty.current = true;
     setT((prev) => prev.map((t) => (t.id === id ? { ...t, [field]: v } : t)));
     queueT();
   };
@@ -162,6 +181,7 @@ export function TicketsView() {
 
   const remove = (id: string) => {
     if (armed === id) {
+      dirty.current = true;
       setT((prev) => prev.filter((t) => t.id !== id));
       queueT();
       setArmed(null);

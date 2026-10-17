@@ -33,6 +33,7 @@ export function Reader({ origin, trigger }: ReaderProps) {
   const rk = useRef<HTMLSpanElement | null>(null);
   const prog = useRef<HTMLDivElement | null>(null);
   const wasOpen = useRef(false);
+  const token = useRef(0);
 
   const resolve = (): NoteLike | null => {
     if (reader.temp) return reader.temp;
@@ -74,6 +75,7 @@ export function Reader({ origin, trigger }: ReaderProps) {
     if (!rootEl) return;
     if (reader.open) {
       rootEl.scrollTop = 0;
+      token.current += 1;
       if (wasOpen.current) {
         revealAll(rootEl);
         return;
@@ -103,12 +105,14 @@ export function Reader({ origin, trigger }: ReaderProps) {
       );
     } else if (wasOpen.current) {
       wasOpen.current = false;
+      const myToken = token.current;
       const [x, y] = origin.current ?? [innerWidth / 2, innerHeight * 0.9];
       const radius = Math.hypot(
         Math.max(x, innerWidth - x),
         Math.max(y, innerHeight - y),
       );
       const fin = () => {
+        if (token.current !== myToken) return;
         rootEl.hidden = true;
         document.body.style.overflow = "";
         closeInstant();
@@ -132,6 +136,7 @@ export function Reader({ origin, trigger }: ReaderProps) {
           },
         )
         .finished.then(() => {
+          if (token.current !== myToken) return;
           fin();
           rootEl.getAnimations().forEach((a) => a.cancel());
         });

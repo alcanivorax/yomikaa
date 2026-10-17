@@ -37,7 +37,7 @@ function heroHTML(): string {
 }
 
 export function HomeView() {
-  const { cur, notes, journal } = useApp();
+  const { cur, notes, journal, isOwner, stats } = useApp();
   const hero = useRef<HTMLDivElement | null>(null);
   const started = useRef(false);
   const heroT = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -73,7 +73,7 @@ export function HomeView() {
   const recent = [...notes]
     .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
     .slice(0, 6);
-  const days = Object.values(journal).filter(hasDay).length;
+  const days = stats.journalDays ?? Object.values(journal).filter(hasDay).length;
 
   const q1Input = (e: React.FormEvent<HTMLInputElement>) => {
     const q = e.currentTarget.value.trim();
@@ -176,10 +176,12 @@ export function HomeView() {
       </button>
       <footer className="foot">
         <span id="f1">{notes.length} notes filed</span>
-        <span id="f2">
-          {days}
-          {days === 1 ? " day journaled" : " days journaled"}
-        </span>
+        {isOwner && (
+          <span id="f2">
+            {days}
+            {days === 1 ? " day journaled" : " days journaled"}
+          </span>
+        )}
         <span>Written by hand, kept in one place</span>
       </footer>
     </section>

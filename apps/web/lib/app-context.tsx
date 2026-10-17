@@ -9,6 +9,7 @@ import type {
   SortKey,
   Ticket,
 } from "@marginalia/shared";
+import type { SaveState } from "@/hooks/useAutosave";
 import type { View } from "./view";
 
 export type NoteLike = Note & { sample?: boolean };
@@ -37,8 +38,13 @@ export interface AppValue {
   go: (v: View) => void;
   revealAll: (el: HTMLElement | null) => void;
 
+  isOwner: boolean;
+  authReady: boolean;
+  signOut: () => void;
+
   notes: NoteLike[];
   journal: Journal;
+  monthCounts: Record<string, number>;
   tickets: Ticket[];
   draft: Draft | null;
   stats: { notes: number; journalDays?: number };
@@ -47,11 +53,15 @@ export interface AppValue {
   setIndex: (patch: Partial<IndexState>) => void;
   openSearch: (target: ShelfTarget) => void;
 
-  createNote: (input: Omit<Note, "id">) => number;
-  updateNote: (id: number, patch: Partial<Omit<Note, "id">>) => void;
+  createNote: (input: Omit<Note, "id">) => Promise<NoteLike>;
+  updateNote: (id: number, patch: Partial<Omit<Note, "id">>) => Promise<NoteLike>;
   saveDraft: (d: Draft | null) => void;
   setDay: (date: string, day: JournalDay | null) => void;
   setTickets: (list: Ticket[]) => void;
+  ensureMonth: (ym: string) => void;
+  ensureYear: (year: string) => void;
+
+  saveState: { draft: SaveState; journal: SaveState; tickets: SaveState };
 
   reader: ReaderState;
   openNote: (id: number, temp?: NoteLike | null) => void;

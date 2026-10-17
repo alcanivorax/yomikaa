@@ -17,6 +17,7 @@ import {
   type Draft,
 } from "@marginalia/shared";
 import { useApp } from "@/lib/app-context";
+import { ApiError } from "@/lib/api";
 
 const blank = (): Draft => ({
   id: null,
@@ -29,10 +30,20 @@ const blank = (): Draft => ({
 });
 
 export function WriteView() {
-  const { cur, notes, draft, saveDraft, openNote, createNote, updateNote, go } =
-    useApp();
+  const {
+    cur,
+    notes,
+    draft,
+    saveDraft,
+    saveState,
+    openNote,
+    createNote,
+    updateNote,
+    go,
+  } = useApp();
   const [W, setW] = useState<Draft>(() => draft ?? blank());
   const [tagText, setTagText] = useState("");
+  const touched = useRef(false);
 
   const wt = useRef<HTMLInputElement | null>(null);
   const wbody = useRef<HTMLTextAreaElement | null>(null);
@@ -42,7 +53,6 @@ export function WriteView() {
   const wsaved = useRef<HTMLSpanElement | null>(null);
   const wkinds = useRef<HTMLDivElement | null>(null);
   const knob = useRef<HTMLSpanElement | null>(null);
-  const knobFirst = useRef(true);
   const dt = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const msgT = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const flashT = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -80,9 +90,23 @@ export function WriteView() {
     clearTimeout(dt.current);
     dt.current = setTimeout(() => {
       saveDraft(next);
-      flash();
     }, 700);
   };
+
+  useEffect(() => {
+    if (touched.current || !draft) return;
+    setW(draft);
+  }, [draft]);
+
+  useEffect(() => {
+    if (saveState.draft === "saved") flash();
+    else if (saveState.draft === "error" && wsaved.current) {
+      wsaved.current.textContent = "Not saved";
+      wsaved.current.style.opacity = "1";
+    } else if (saveState.draft === "saving" && wsaved.current) {
+      wsaved.current.textContent = "saved";
+    }
+  }, [saveState.draft]);
 
   const placeKnob = (instant: boolean) => {
     const pressed = wkinds.current?.querySelector<HTMLElement>(
@@ -100,10 +124,14 @@ export function WriteView() {
   };
 
   useLayoutEffect(() => {
-    placeKnob(knobFirst.current);
-    knobFirst.current = false;
-     
-  }, [W.kind]);
+    if (cur !== "write") return;
+    placeKnob(true);
+  }, [cur]);
+
+  useLayoutEffect(() => {
+    if (cur !== "write") return;
+    placeKnob(false);
+  }, [W.kind, cur]);
 
   useEffect(() => {
     const onResize = () => placeKnob(true);
@@ -120,6 +148,7 @@ export function WriteView() {
   }, [cur, W.body]);
 
   const field = (k: "title" | "body" | "m" | "url", v: string) => {
+    touched.current = true;
     const next = { ...W, [k]: v };
     setW(next);
     msg("");
@@ -127,6 +156,7 @@ export function WriteView() {
   };
 
   const addTag = () => {
+    touched.current = true;
     const next = { ...W };
     const t = slug(tagText);
     if (t && !next.tags.includes(t)) next.tags.push(t);
@@ -140,6 +170,7 @@ export function WriteView() {
       e.preventDefault();
       addTag();
     } else if (e.key === "Backspace" && !e.currentTarget.value && W.tags.length) {
+      touched.current = true;
       const next = { ...W, tags: W.tags.slice(0, -1) };
       setW(next);
       draftSave(next);
@@ -147,12 +178,14 @@ export function WriteView() {
   };
 
   const removeTag = (i: number) => {
+    touched.current = true;
     const next = { ...W, tags: W.tags.filter((_, x) => x !== i) };
     setW(next);
     draftSave(next);
   };
 
   const setKind = (k: Draft["kind"]) => {
+    touched.current = true;
     const next = { ...W, kind: k };
     setW(next);
     draftSave(next);
@@ -171,7 +204,7 @@ export function WriteView() {
     });
   };
 
-  const fileIt = () => {
+  const fileIt = async () => {
     const err = fileError({
       title: W.title,
       body: W.body,
@@ -186,17 +219,20 @@ export function WriteView() {
       return;
     }
     const n = draftNote();
-    let id: number;
-    if (W.id != null) {
-      id = W.id;
-      updateNote(id, n);
-    } else {
-      id = createNote(n);
+    try {
+      let id: number;
+      if (W.id != null) {
+        id = (await updateNote(W.id, n)).id;
+      } else {
+        id = (await createNote(n)).id;
+      }
+      setW(blank());
+      saveDraft(null);
+      msg("Filed.");
+      setTimeout(() => openNote(id), 500);
+    } catch (e) {
+      msg(e instanceof ApiError ? e.message : "Could not file.");
     }
-    setW(blank());
-    saveDraft(null);
-    msg("Filed.");
-    setTimeout(() => openNote(id), 500);
   };
   const fileItRef = useRef(fileIt);
   fileItRef.current = fileIt;
@@ -207,6 +243,7 @@ export function WriteView() {
       const id = (e as CustomEvent<number>).detail;
       const n = notes.find((x) => x.id === id);
       if (!n || n.sample) return;
+      touched.current = true;
       setW({
         id,
         title: n.title,
@@ -285,7 +322,7 @@ export function WriteView() {
             />
           </div>
         </div>
-        <div className="wrow" id="wurlrow" hidden={W.kind !== "Link"}>
+        <div className="wrow" id="wurlrow">
           <input
             className="mini"
             style={{ minWidth: "min(100%,440px)" }}
@@ -342,6 +379,7 @@ export function WriteView() {
           className="g"
           id="wclear"
           onClick={() => {
+            touched.current = true;
             setW(blank());
             saveDraft(null);
             msg("");

@@ -70,6 +70,36 @@
     cursor: pointer;
     text-align: inherit;
   }
+  /*
+   * Tailwind preflight sets `letter-spacing: inherit` on form controls; the
+   * reference does not use preflight, so stray tracking on `nav`/`.rtop` must
+   * not leak into buttons and inputs. Explicit component rules still win.
+   */
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    letter-spacing: normal;
+  }
+  /*
+   * Tailwind preflight flattens `sub`/`sup` (`line-height: 0`,
+   * `vertical-align: baseline`); the reference keeps the UA defaults, which
+   * changes the line box height of `.pill` counters.
+   */
+  sub,
+  sup {
+    font-size: smaller;
+    line-height: normal;
+    position: static;
+    vertical-align: baseline;
+  }
+  sub {
+    vertical-align: sub;
+  }
+  sup {
+    vertical-align: super;
+  }
   a {
     color: inherit;
     text-decoration: none;

@@ -6,46 +6,72 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
+import { hl } from "@marginalia/shared";
 import {
-  hasDay,
-  hl,
-  SAMPLE_NOTES,
-  type Draft,
-  type Journal,
-  type Ticket,
-} from "@marginalia/shared";
-import { AppCtx, type AppValue, type NoteLike, type IndexState, type ShelfTarget } from "@/lib/app-context";
+  AppCtx,
+  type AppValue,
+  type NoteLike,
+  type IndexState,
+  type ShelfTarget,
+} from "@/lib/app-context";
 import { VIEW_LABEL, VIEW_PATH, viewFromPath, type View } from "@/lib/view";
 import { useReveal } from "@/hooks/useReveal";
 import { useCursor } from "@/hooks/useCursor";
+import { useAppData } from "@/hooks/useAppData";
 import { Reader } from "@/components/Reader";
+import { HomeView } from "@/components/views/HomeView";
+import { IndexView } from "@/components/views/IndexView";
+import { WriteView } from "@/components/views/WriteView";
+import { JournalView } from "@/components/views/JournalView";
+import { TicketsView } from "@/components/views/TicketsView";
 
 const RM =
   typeof window !== "undefined" &&
   matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+const OWNER_VIEWS: View[] = ["write", "journal", "tickets"];
+
 interface ShellProps {
   initialView: View;
-  children: ReactNode;
+  initialNotes: NoteLike[] | null;
+  initialNote?: number | null;
 }
 
-export function Shell({ initialView, children }: ShellProps) {
+export function Shell({ initialView, initialNotes, initialNote = null }: ShellProps) {
   const [cur, setCur] = useState<View>(initialView);
-  const [notes, setNotes] = useState<NoteLike[]>(() =>
-    SAMPLE_NOTES.map((n, i) => ({ ...n, id: i, sample: true })),
-  );
-  const [journal, setJournal] = useState<Journal>({});
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [draft, setDraft] = useState<Draft | null>(null);
-  const [reader, setReader] = useState({ open: false, id: 0, temp: null as NoteLike | null });
+  const [reader, setReader] = useState({
+    open: initialNote != null,
+    id: initialNote ?? 0,
+    temp: null as NoteLike | null,
+  });
   const [index, setIndexState] = useState<IndexState>({
     q: "",
     kind: "All",
     tag: null,
     sort: "new",
   });
+
+  const data = useAppData(initialNotes);
+  const {
+    isOwner,
+    authReady,
+    notes,
+    journal,
+    monthCounts,
+    tickets,
+    draft,
+    stats,
+    createNote,
+    updateNote,
+    saveDraft,
+    setDay,
+    setTickets,
+    ensureMonth,
+    ensureYear,
+    saveState,
+    signOut,
+  } = data;
 
   const curtain = useRef<HTMLDivElement | null>(null);
   const curtainLabel = useRef<HTMLSpanElement | null>(null);
@@ -155,6 +181,12 @@ export function Shell({ initialView, children }: ShellProps) {
   /* back and forward run the same curtain */
   useEffect(() => {
     const onPop = () => {
+      const m = /^\/n\/(\d+)$/.exec(window.location.pathname);
+      if (m) {
+        setReader({ open: true, id: Number(m[1]), temp: null });
+        return;
+      }
+      setReader((r) => (r.open ? { ...r, open: false } : r));
       const v = viewFromPath(window.location.pathname);
       if (v !== curRef.current) {
         if (RM) swap(v);
@@ -170,13 +202,38 @@ export function Shell({ initialView, children }: ShellProps) {
     goRef.current = go;
   }, [go]);
 
+  /* visitors never reach owner-only views (see 11 §3 / DEVIATIONS) */
+  useEffect(() => {
+    if (!authReady || isOwner) return;
+    if (OWNER_VIEWS.includes(curRef.current)) {
+      history.replaceState({ view: "home" }, "", VIEW_PATH.home);
+      swap("home");
+    }
+  }, [authReady, isOwner, swap]);
+
   const openNote = useCallback((id: number, temp: NoteLike | null = null) => {
     trigger.current = document.activeElement;
     setReader({ open: true, id, temp });
+    if (!temp && id >= 0)
+      history.pushState(
+        { note: id, view: curRef.current },
+        "",
+        `/n/${id}`,
+      );
   }, []);
 
   const closeInstant = useCallback(() => {
     setReader((r) => (r.open ? { ...r, open: false } : r));
+  }, []);
+
+  const closeNote = useCallback(() => {
+    const st = window.history.state as { note?: number } | null;
+    if (window.location.pathname.startsWith("/n/") && st?.note != null)
+      history.back();
+    else {
+      history.replaceState({ view: curRef.current }, "", VIEW_PATH[curRef.current]);
+      setReader((r) => ({ ...r, open: false }));
+    }
   }, []);
 
   const setIndex = useCallback((patch: Partial<IndexState>) => {
@@ -222,60 +279,66 @@ export function Shell({ initialView, children }: ShellProps) {
     };
   }, [toSearch]);
 
-  const value = useMemo<AppValue>(() => {
-    const dayCount = Object.values(journal).filter(hasDay).length;
-    return {
+  const value = useMemo<AppValue>(
+    () => ({
       cur,
       go,
       revealAll,
+      isOwner,
+      authReady,
+      signOut,
       notes,
       journal,
+      monthCounts,
       tickets,
       draft,
-      stats: { notes: notes.length, journalDays: dayCount },
+      stats,
       index,
       setIndex,
       openSearch,
-      createNote: (input) => {
-        const id = notes.reduce((m, n) => Math.max(m, n.id), -1) + 1;
-        setNotes((prev) => [...prev, { ...input, id }]);
-        return id;
-      },
-      updateNote: (id, patch) => {
-        setNotes((prev) =>
-          prev.map((n) => (n.id === id ? { ...n, ...patch, id } : n)),
-        );
-      },
-      saveDraft: setDraft,
-      setDay: (date, day) => {
-        setJournal((prev) => {
-          const next = { ...prev };
-          if (day) next[date] = day;
-          else delete next[date];
-          return next;
-        });
-      },
-      setTickets: (list) => setTickets(list),
+      createNote,
+      updateNote,
+      saveDraft,
+      setDay,
+      setTickets,
+      ensureMonth,
+      ensureYear,
+      saveState,
       reader,
       openNote,
-      closeNote: () => setReader((r) => ({ ...r, open: false })),
+      closeNote,
       closeInstant,
-    };
-  }, [
-    cur,
-    go,
-    revealAll,
-    notes,
-    journal,
-    tickets,
-    draft,
-    reader,
-    openNote,
-    closeInstant,
-    index,
-    setIndex,
-    openSearch,
-  ]);
+    }),
+    [
+      cur,
+      go,
+      revealAll,
+      isOwner,
+      authReady,
+      signOut,
+      notes,
+      journal,
+      monthCounts,
+      tickets,
+      draft,
+      stats,
+      index,
+      setIndex,
+      openSearch,
+      createNote,
+      updateNote,
+      saveDraft,
+      setDay,
+      setTickets,
+      ensureMonth,
+      ensureYear,
+      saveState,
+      reader,
+      openNote,
+      closeNote,
+      closeInstant,
+    ],
+  );
 
   /* cross-view click delegation */
   useEffect(() => {
@@ -304,6 +367,7 @@ export function Shell({ initialView, children }: ShellProps) {
       if (t.closest("[data-close]")) return value.closeNote();
       const ed = t.closest("[data-edit]");
       if (ed) {
+        value.closeInstant();
         window.dispatchEvent(
           new CustomEvent("mg:edit", {
             detail: Number((ed as HTMLElement).dataset.edit),
@@ -311,12 +375,14 @@ export function Shell({ initialView, children }: ShellProps) {
         );
         return;
       }
-      if (t.closest("[data-random]"))
-        return openNote(Math.floor(Math.random() * notes.length));
+      if (t.closest("[data-random]")) {
+        if (!notes.length) return;
+        return openNote(notes[Math.floor(Math.random() * notes.length)].id);
+      }
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, [go, closeInstant, openNote, value, notes.length]);
+  }, [go, closeInstant, openNote, value, notes]);
 
   /* keyboard shortcuts */
   useEffect(() => {
@@ -372,7 +438,7 @@ export function Shell({ initialView, children }: ShellProps) {
 
   return (
     <AppCtx.Provider value={value}>
-      <div className="curtain" id="curtain" aria-hidden="true">
+      <div className="curtain" id="curtain" aria-hidden="true" ref={curtain}>
         <span id="cl" ref={curtainLabel}>
           Marginalia
         </span>
@@ -390,14 +456,20 @@ export function Shell({ initialView, children }: ShellProps) {
         <span className="clock" id="clock" ref={clock} />
         <nav aria-label="Primary">
           <button data-go="search">Index</button>
-          <button data-go="write">Write</button>
-          <button data-go="journal">Journal</button>
-          <button data-go="tickets">Tickets</button>
+          {isOwner && <button data-go="write">Write</button>}
+          {isOwner && <button data-go="journal">Journal</button>}
+          {isOwner && <button data-go="tickets">Tickets</button>}
           <button data-random>Random</button>
         </nav>
       </header>
 
-      <main>{children}</main>
+      <main>
+        <HomeView />
+        <IndexView />
+        <WriteView />
+        <JournalView />
+        <TicketsView />
+      </main>
 
       <Reader origin={origin} trigger={trigger} />
     </AppCtx.Provider>

@@ -54,7 +54,16 @@ function copyPart(list: JournalEntry[] | undefined): JournalEntry[] {
 }
 
 export function JournalView() {
-  const { cur, journal, setDay } = useApp();
+  const {
+    cur,
+    journal,
+    monthCounts,
+    stats,
+    setDay,
+    ensureMonth,
+    ensureYear,
+    saveState,
+  } = useApp();
   const [jd, setJd] = useState<string>(() => today());
   const [jm, setJm] = useState<string>(() => today().slice(0, 7));
   const [jOpen, setJOpen] = useState(true);
@@ -69,6 +78,7 @@ export function JournalView() {
   const journalRef = useRef(journal);
   const jdRef = useRef(jd);
   const Eref = useRef(E);
+  const dirty = useRef(false);
 
   useEffect(() => {
     journalRef.current = journal;
@@ -109,8 +119,17 @@ export function JournalView() {
       e[p].filter(usedEntry).map((x) => ({ from: x.from, to: x.to, text: x.text }));
     const v = { life: clean("life"), work: clean("work") };
     setDay(jdRef.current, v.life.length || v.work.length ? v : null);
-    flashSaved();
   }, [setDay]);
+
+  useEffect(() => {
+    if (saveState.journal === "saved") flashSaved();
+    else if (saveState.journal === "error" && jsaved.current) {
+      jsaved.current.textContent = "Not saved";
+      jsaved.current.style.opacity = "1";
+    } else if (saveState.journal === "saving" && jsaved.current) {
+      jsaved.current.textContent = "Saved";
+    }
+  }, [saveState.journal]);
 
   const saveRef = useRef(saveDay);
   saveRef.current = saveDay;
@@ -142,6 +161,7 @@ export function JournalView() {
 
   /* load the selected day */
   const loadDay = useCallback((date: string) => {
+    dirty.current = false;
     const d = journalRef.current[date] || { life: [], work: [] };
     const part = (p: "life" | "work") => {
       const l = copyPart(d[p]);
@@ -153,6 +173,21 @@ export function JournalView() {
   useEffect(() => {
     if (cur === "journal") loadDay(jd);
   }, [cur, jd, loadDay]);
+
+  /* pull the month's days from the API as the browser moves */
+  const year = jm.slice(0, 4);
+  useEffect(() => {
+    if (cur !== "journal") return;
+    ensureYear(year);
+    ensureMonth(jm);
+    ensureMonth(jd.slice(0, 7));
+  }, [cur, year, jm, jd, ensureMonth, ensureYear]);
+
+  /* adopt freshly fetched month data until the user edits */
+  useEffect(() => {
+    if (cur === "journal" && !dirty.current) loadDay(jdRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journal, cur]);
 
   /* auto-grow every textarea in the section */
   const growAll = () => {
@@ -191,6 +226,7 @@ export function JournalView() {
   }, [E]);
 
   const addEntry = (p: "life" | "work", after?: number) => {
+    dirty.current = true;
     setE((prev) => {
       const L = prev[p];
       const prevEnt = L[after === undefined ? L.length - 1 : after];
@@ -208,6 +244,7 @@ export function JournalView() {
   };
 
   const removeEntry = (p: "life" | "work", i: number) => {
+    dirty.current = true;
     setE((prev) => {
       const L = prev[p].filter((_, x) => x !== i);
       if (!L.length) L.push(blankEntry());
@@ -222,6 +259,7 @@ export function JournalView() {
     field: keyof JournalEntry,
     v: string,
   ) => {
+    dirty.current = true;
     setE((prev) => {
       const L = prev[p].slice();
       L[i] = { ...L[i], [field]: v };
@@ -243,6 +281,7 @@ export function JournalView() {
     if (box.contains(e.relatedTarget as Node | null)) return;
     const sorted = sortPart(E[p]);
     if (sorted.some((x, i) => x !== E[p][i])) {
+      dirty.current = true;
       setE((prev) => ({ ...prev, [p]: sorted }));
       queueSave();
     }
@@ -275,7 +314,6 @@ export function JournalView() {
   /* derived: month browser */
   const tdy = today();
   const tm = tdy.slice(0, 7);
-  const year = jm.slice(0, 4);
   const monthName = (m: string, opts: Intl.DateTimeFormatOptions) =>
     new Date(m + "-01T00:00").toLocaleDateString("en", opts);
 
@@ -290,7 +328,8 @@ export function JournalView() {
   })();
   const dim = daysInMonth(jm);
 
-  const dayCount = Object.values(journal).filter(filled).length;
+  const dayCount =
+    stats.journalDays ?? Object.values(journal).filter(filled).length;
   const dateObj = new Date(jd + "T00:00");
 
   const prevDisabled = jd >= tdy;
@@ -369,9 +408,7 @@ export function JournalView() {
             >
               {Array.from({ length: 12 }, (_, i) => {
                 const m = year + "-" + pad2(i + 1);
-                const c = Object.keys(journal).filter(
-                  (k) => k.startsWith(m) && filled(journal[k]),
-                ).length;
+                const c = monthCounts[m] ?? 0;
                 return (
                   <button
                     key={m}
