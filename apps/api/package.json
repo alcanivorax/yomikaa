@@ -14,9 +14,6 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@marginalia/shared": "workspace:*",
     "@nestjs/common": "12.1.3",
