@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       "react-hooks/refs": "off",
       "react-hooks/purity": "off",
+      "react-hooks/set-state-in-effect": "off",
     },
   },
   // Override default ignores of eslint-config-next.
