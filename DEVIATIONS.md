@@ -1,6 +1,6 @@
 # Deviations
 
-All intentional differences from `reference/marginalia-reference.html` and the
+All intentional differences from `reference/yomikaa-reference.html` and the
 spec. Everything else (fonts, colors, spacing, easing, durations, copy, layout,
 behavior) matches the reference exactly.
 

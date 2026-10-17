@@ -42,7 +42,7 @@ const dmMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Marginalia",
+  title: "Yomikaa",
   description: "A personal archive, written by hand and kept in one place.",
 };
 

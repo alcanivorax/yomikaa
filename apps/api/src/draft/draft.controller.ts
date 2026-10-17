@@ -8,7 +8,7 @@ import {
   Res,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import { draftSchema, type DraftInput } from "@marginalia/shared";
+import { draftSchema, type DraftInput } from "@yomikaa/shared";
 import type { Response } from "express";
 import { Owner } from "../auth/owner.decorator";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";

@@ -6,7 +6,7 @@ import {
   esc,
   pad2,
   readingMinutes,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { useApp, type NoteLike } from "@/lib/app-context";
 
 const RM =

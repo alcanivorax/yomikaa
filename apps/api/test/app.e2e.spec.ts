@@ -137,7 +137,7 @@ describe("owner guard", () => {
     const h = enc({ alg: "HS256", typ: "JWT" });
     const p = enc({
       sub: "00000000-0000-0000-0000-000000000000",
-      iss: "marginalia-dev",
+      iss: "yomikaa-dev",
     });
     const sig = createHmac("sha256", SECRET).update(`${h}.${p}`).digest("base64url");
     await request(BASE)

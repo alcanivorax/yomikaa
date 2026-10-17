@@ -1,5 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
-import type { TagDto } from "@marginalia/shared";
+import type { TagDto } from "@yomikaa/shared";
 import { Public } from "../auth/public.decorator";
 import { PrismaService } from "../prisma/prisma.service";
 

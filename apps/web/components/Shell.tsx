@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { hl } from "@marginalia/shared";
+import { hl } from "@yomikaa/shared";
 import {
   AppCtx,
   type AppValue,
@@ -440,7 +440,7 @@ export function Shell({ initialView, initialNotes, initialNote = null }: ShellPr
     <AppCtx.Provider value={value}>
       <div className="curtain" id="curtain" aria-hidden="true" ref={curtain}>
         <span id="cl" ref={curtainLabel}>
-          Marginalia
+          Yomikaa
         </span>
       </div>
       <div className="cur" id="cur" ref={cursor} hidden />
@@ -450,8 +450,8 @@ export function Shell({ initialView, initialNotes, initialNote = null }: ShellPr
       </div>
 
       <header className="bar">
-        <button className="wm" data-go="home" aria-label="Marginalia, home">
-          Marginalia
+        <button className="wm" data-go="home" aria-label="Yomikaa, home">
+          Yomikaa
         </button>
         <span className="clock" id="clock" ref={clock} />
         <nav aria-label="Primary">

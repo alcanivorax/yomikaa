@@ -15,7 +15,7 @@ import {
   today,
   wordCount,
   type Draft,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { useApp } from "@/lib/app-context";
 import { ApiError } from "@/lib/api";
 

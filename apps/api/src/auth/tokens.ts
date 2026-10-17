@@ -33,7 +33,7 @@ export function parseJwt(token: string): ParsedJwt {
 export function verifyDevToken(token: string, secret: string): TokenPayload {
   const { header, payload, signingInput, signature } = parseJwt(token);
   if (header.alg !== "HS256") throw new Error("Unexpected algorithm");
-  if (payload.iss !== "marginalia-dev") throw new Error("Unexpected issuer");
+  if (payload.iss !== "yomikaa-dev") throw new Error("Unexpected issuer");
   const expected = createHmac("sha256", secret).update(signingInput).digest();
   if (
     signature.length !== expected.length ||
@@ -90,7 +90,7 @@ export function mintDevToken(secret: string, subject: string): string {
   const now = Math.floor(Date.now() / 1000);
   const payload = enc({
     sub: subject,
-    iss: "marginalia-dev",
+    iss: "yomikaa-dev",
     iat: now,
     exp: now + 60 * 60 * 24 * 7,
   });

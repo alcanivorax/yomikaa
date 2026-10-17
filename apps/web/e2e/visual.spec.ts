@@ -4,7 +4,7 @@ import path from "node:path";
 import { resetMutableData } from "./reset-data";
 
 const REF_URL =
-  "file:///home/vagabond/Project/yomikaa/marginalia-agent-kit/reference/marginalia-reference.html";
+  "file:///home/vagabond/Project/yomikaa/yomikaa-agent-kit/reference/yomikaa-reference.html";
 const APP_URL = process.env.E2E_WEB_URL ?? "http://localhost:3000";
 
 test.beforeAll(() => resetMutableData());

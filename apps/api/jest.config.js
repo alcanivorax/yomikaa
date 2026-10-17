@@ -8,6 +8,6 @@ module.exports = {
   testEnvironment: "node",
   testPathIgnorePatterns: ["/node_modules/", "/dist/", "/src/generated/"],
   moduleNameMapper: {
-    "^@marginalia/shared$": "<rootDir>/../../packages/shared/src/index.ts",
+    "^@yomikaa/shared$": "<rootDir>/../../packages/shared/src/index.ts",
   },
 };

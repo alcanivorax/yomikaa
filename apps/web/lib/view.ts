@@ -1,7 +1,7 @@
 export type View = "home" | "search" | "write" | "journal" | "tickets";
 
 export const VIEW_LABEL: Record<View, string> = {
-  home: "Marginalia",
+  home: "Yomikaa",
   search: "Index",
   write: "Write",
   journal: "Journal",

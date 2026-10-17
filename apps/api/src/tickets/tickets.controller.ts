@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { z } from "zod";
-import { ticketSchema, type Ticket } from "@marginalia/shared";
+import { ticketSchema, type Ticket } from "@yomikaa/shared";
 import type { Response } from "express";
 import { Owner } from "../auth/owner.decorator";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";

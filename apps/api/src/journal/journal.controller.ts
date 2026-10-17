@@ -11,7 +11,7 @@ import {
   journalDaySchema,
   type JournalDay,
   type JournalDayInput,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { Owner } from "../auth/owner.decorator";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { JournalService } from "./journal.service";

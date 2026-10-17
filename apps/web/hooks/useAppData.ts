@@ -12,7 +12,7 @@ import {
   type JournalDayInput,
   type Note,
   type Ticket,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { api, clearDevToken, hasDevToken, type Stats } from "@/lib/api";
 import { useAutosave, type SaveState } from "@/hooks/useAutosave";
 import type { NoteLike } from "@/lib/app-context";

@@ -8,7 +8,7 @@ import type {
   Note,
   SortKey,
   Ticket,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import type { SaveState } from "@/hooks/useAutosave";
 import type { View } from "./view";
 

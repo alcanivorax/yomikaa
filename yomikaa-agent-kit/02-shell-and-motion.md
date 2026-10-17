@@ -22,7 +22,7 @@ body
 - `.bar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:calc(16px + env(safe-area-inset-top,0px)) var(--pad) 16px;color:#fff;mix-blend-mode:difference;pointer-events:none}`
 - `.bar>*{pointer-events:auto}` so only the controls catch clicks.
 - **The inversion trick:** the bar is white text with `mix-blend-mode:difference`, so it appears dark over the bone page and light over the black Work half, the black random band and the black curtain. Do not give any ancestor `isolation`, `transform`, `opacity < 1` or `filter` or the blend breaks. The bar must be a direct child of `body`.
-- Left: `button.wm` "Marginalia" (italic display 28px, 18px at 600px and below) with `data-go="home"` and `aria-label="Marginalia, home"`.
+- Left: `button.wm` "Yomikaa" (italic display 28px, 18px at 600px and below) with `data-go="home"` and `aria-label="Yomikaa, home"`.
 - Center: `span.clock` showing `Sun · 19:52` (short weekday, middle dot, 24-hour `HH:MM`, local time). Refreshes every 20 seconds. Hidden at 600px and below.
 - Right: `nav` with five buttons in this order: **Index** (`data-go="search"`), **Write** (`data-go="write"`), **Journal** (`data-go="journal"`), **Tickets** (`data-go="tickets"`), **Random** (`data-random`). Gap 26px.
 - **At 600px and below** the bar tightens so all five items fit at 360px without clipping: `.bar{gap:10px}`, wordmark 18px, nav `gap:9px;font-size:9.5px;letter-spacing:.02em` (the clock is already hidden). Verify at 360 and 390 that the nav's right edge sits at the page gutter (`--pad`) and does not overlap the wordmark.
@@ -37,7 +37,7 @@ State: `cur` (current view id, starts `home`), `busy` (boolean).
 1. If `busy`, return.
 2. If `view === cur`, smooth-scroll to top and return (`behavior:"auto"` under reduced motion).
 3. If reduced motion, call `swap(view)` immediately and return.
-4. Otherwise: `busy = true`; set the curtain label (`#cl`) to the view name (`Marginalia`, `Index`, `Write`, `Journal`, `Tickets`).
+4. Otherwise: `busy = true`; set the curtain label (`#cl`) to the view name (`Yomikaa`, `Index`, `Write`, `Journal`, `Tickets`).
 5. Animate `#curtain` with the Web Animations API: `translateY(100%)` to `translateY(0)`, **560ms**, easing `cubic-bezier(.7,0,.2,1)`, `fill:"forwards"`.
 6. When finished: call `swap(view)`, then animate `translateY(0)` to `translateY(-100%)`, **680ms**, **delay 140ms**, same easing, `fill:"forwards"`.
 7. When finished: `busy = false` and cancel all animations on the curtain (it returns to its CSS resting position `translateY(100%)`, off-screen below).

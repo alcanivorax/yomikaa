@@ -1,4 +1,4 @@
-import { SAMPLE_NOTES } from "@marginalia/shared";
+import { SAMPLE_NOTES } from "@yomikaa/shared";
 import { fetchNotesServer } from "@/lib/api";
 import type { NoteLike } from "@/lib/app-context";
 import { Shell } from "@/components/Shell";

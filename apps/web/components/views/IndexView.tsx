@@ -15,7 +15,7 @@ import {
   sortNotes,
   type Note,
   type SortKey,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { useApp } from "@/lib/app-context";
 
 const RM =

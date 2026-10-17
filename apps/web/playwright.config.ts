@@ -22,13 +22,13 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "pnpm --filter @marginalia/api start",
+      command: "pnpm --filter @yomikaa/api start",
       url: `${API}/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
     {
-      command: "pnpm --filter @marginalia/web start",
+      command: "pnpm --filter @yomikaa/web start",
       url: WEB,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

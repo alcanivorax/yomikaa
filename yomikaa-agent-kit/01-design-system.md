@@ -1,6 +1,6 @@
 # 01 Design system
 
-Everything visual in Marginalia comes from the values on this page. Copy the stylesheet from `reference/marginalia-reference.html` (the `<style>` block) as your starting point; this page explains it and lists every value so you can verify.
+Everything visual in Yomikaa comes from the values on this page. Copy the stylesheet from `reference/yomikaa-reference.html` (the `<style>` block) as your starting point; this page explains it and lists every value so you can verify.
 
 ## 1. Tokens
 

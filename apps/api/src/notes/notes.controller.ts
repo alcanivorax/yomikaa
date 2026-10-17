@@ -14,7 +14,7 @@ import {
   noteCreateSchema,
   notePatchSchema,
   type NoteDto,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { Public } from "../auth/public.decorator";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { NotesService, type NotesQuery } from "./notes.service";

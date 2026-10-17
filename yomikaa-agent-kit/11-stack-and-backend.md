@@ -1,6 +1,6 @@
 # 11 Production stack: Next.js, NestJS, Prisma, Supabase, Tailwind
 
-This page **replaces** the localStorage persistence and the "verbatim stylesheet" rule from the earlier pages for the real project. Everything the user sees must still match `reference/marginalia-reference.html` exactly (pages `01` to `10` define what that is). Only *how it is built* and *where the data lives* change.
+This page **replaces** the localStorage persistence and the "verbatim stylesheet" rule from the earlier pages for the real project. Everything the user sees must still match `reference/yomikaa-reference.html` exactly (pages `01` to `10` define what that is). Only *how it is built* and *where the data lives* change.
 
 | Layer | Choice |
 |---|---|
@@ -15,7 +15,7 @@ Use the latest stable release of each at build time and pin them in the lockfile
 ## 1. Repository layout
 
 ```
-marginalia/
+yomikaa/
   apps/
     web/                 Next.js app (UI only; no database access)
       app/               layout.tsx, [[...view]]/page.tsx, login/page.tsx
@@ -33,7 +33,7 @@ marginalia/
         common/          ZodValidationPipe, exception filter
   packages/
     shared/              Zod schemas, DTO types, pure helpers (see section 6)
-  reference/             marginalia-reference.html (visual source of truth; do not ship)
+  reference/             yomikaa-reference.html (visual source of truth; do not ship)
   .env.example  pnpm-workspace.yaml  package.json  DEVIATIONS.md
 ```
 Only the API talks to the database. The web app never receives the database URL or the service role key.

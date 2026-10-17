@@ -54,7 +54,7 @@ export default function LoginPage() {
         }}
       >
         <h1 style={{ font: "400 40px/1 var(--disp)", margin: 0 }}>
-          Marginalia
+          Yomikaa
         </h1>
         <label className="lbl" htmlFor="email">
           Sign in

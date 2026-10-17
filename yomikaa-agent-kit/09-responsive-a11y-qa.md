@@ -114,7 +114,7 @@ Timing checks (use `performance.now()` around events): headline first letter sta
 7. Today is based on the local clock. Journal day keys and note dates are local dates.
 8. Sample notes have no Edit link; only notes written in Write do.
 9. The Write dock exists on every page's DOM but is shown only when Write is current.
-10. The curtain label for Home reads `Marginalia`, for the others `Index`, `Write`, `Journal`, `Tickets`.
+10. The curtain label for Home reads `Yomikaa`, for the others `Index`, `Write`, `Journal`, `Tickets`.
 11. Journal entries re-sort by start time only when focus leaves a list, never while typing. Ticket rows never re-sort; new ones go to the top.
 12. A ticket whose status changes stays visible under a non-matching filter until the list is next re-rendered (filter click, add, remove, or re-entering the view).
 

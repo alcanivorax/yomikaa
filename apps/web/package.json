@@ -1,5 +1,5 @@
 {
-  "name": "@marginalia/web",
+  "name": "@yomikaa/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@marginalia/shared": "workspace:*",
+    "@yomikaa/shared": "workspace:*",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
     "@tanstack/react-query": "5.104.3",

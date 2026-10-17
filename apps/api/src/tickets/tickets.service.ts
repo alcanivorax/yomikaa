@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { usedTicket, type Ticket, type TicketStatus } from "@marginalia/shared";
+import { usedTicket, type Ticket, type TicketStatus } from "@yomikaa/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { toDate, toKey } from "../common/dates";
 

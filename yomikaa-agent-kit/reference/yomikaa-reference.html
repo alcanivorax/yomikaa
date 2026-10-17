@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#eeebe3">
-<title>Marginalia</title>
+<title>Yomikaa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&display=swap" rel="stylesheet">
@@ -266,12 +266,12 @@ mark{background:var(--signal);color:var(--ink);padding:0 .06em;border-radius:2px
 </style>
 </head>
 <body>
-<div class="curtain" id="curtain" aria-hidden="true"><span id="cl">Marginalia</span></div>
+<div class="curtain" id="curtain" aria-hidden="true"><span id="cl">Yomikaa</span></div>
 <div class="cur" id="cur" hidden></div>
 <div class="peek" id="peek" aria-hidden="true"><div class="k"></div><p></p></div>
 
 <header class="bar">
-  <button class="wm" data-go="home" aria-label="Marginalia, home">Marginalia</button>
+  <button class="wm" data-go="home" aria-label="Yomikaa, home">Yomikaa</button>
   <span class="clock" id="clock"></span>
   <nav aria-label="Primary">
     <button data-go="search">Index</button>
@@ -441,7 +441,7 @@ $("#q1").addEventListener("input",e=>{const q=e.target.value.trim();
 
 /* router with curtain */
 let cur="home",busy=false;
-const LABEL={home:"Marginalia",search:"Index",write:"Write",journal:"Journal",tickets:"Tickets"};
+const LABEL={home:"Yomikaa",search:"Index",write:"Write",journal:"Journal",tickets:"Tickets"};
 function swap(v){
   $$(".view").forEach(s=>s.classList.toggle("on",s.id===v));
   $$("nav [data-go]").forEach(b=>b.dataset.go===v?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));

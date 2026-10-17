@@ -1,4 +1,4 @@
-// Marginalia Prisma schema — see 11-stack-and-backend.md section 2.
+// Yomikaa Prisma schema — see 11-stack-and-backend.md section 2.
 
 generator client {
   provider = "prisma-client"

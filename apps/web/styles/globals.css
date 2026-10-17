@@ -3,7 +3,7 @@
 
 /*
  * Reference tokens. Kept as plain custom properties so components.css can use
- * the same variable names as reference/marginalia-reference.html.
+ * the same variable names as reference/yomikaa-reference.html.
  */
 :root {
   --bone: #eeebe3;

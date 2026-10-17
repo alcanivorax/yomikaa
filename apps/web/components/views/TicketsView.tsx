@@ -15,7 +15,7 @@ import {
   usedTicket,
   type Ticket,
   type TicketStatus,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { useApp } from "@/lib/app-context";
 
 export function TicketsView() {

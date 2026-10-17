@@ -11,7 +11,7 @@ import {
   type NoteDto,
   type TagDto,
   type Ticket,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 
 export const DEV_TOKEN_COOKIE = "mg_dev_token";
 

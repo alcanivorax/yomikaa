@@ -1,6 +1,6 @@
-# Marginalia: build kit for a coding agent
+# Yomikaa: build kit for a coding agent
 
-You are going to build **Marginalia**, a personal archive website, from scratch so that the result is **indistinguishable from the reference build**. This kit has one page per section of the site. This page is the master brief and the process guide. Read it fully before opening any other page.
+You are going to build **Yomikaa**, a personal archive website, from scratch so that the result is **indistinguishable from the reference build**. This kit has one page per section of the site. This page is the master brief and the process guide. Read it fully before opening any other page.
 
 ## 1. What you are building (30-second version)
 
@@ -21,7 +21,7 @@ The aesthetic in one line: **an editorial magazine that happens to be your archi
 
 ## 2. The ground truth
 
-`reference/marginalia-reference.html` is a complete, working, single-file build of the exact site. It is the **source of truth**. Where any page in this kit and the reference disagree on a value, **the reference wins**. Open it in a browser first and use every feature for ten minutes before you write code: type in the search, open a note, write and file a note, write a journal entry, resize the window.
+`reference/yomikaa-reference.html` is a complete, working, single-file build of the exact site. It is the **source of truth**. Where any page in this kit and the reference disagree on a value, **the reference wins**. Open it in a browser first and use every feature for ten minutes before you write code: type in the search, open a note, write and file a note, write a journal entry, resize the window.
 
 Your job is to reproduce it, not to improve it. Do not change fonts, colors, spacing, easing, durations, copy, or placement. If you believe something is a bug, record it in `DEVIATIONS.md` and keep the reference behavior unless the owner tells you otherwise. The reference's known quirks are listed in `09-responsive-a11y-qa.md` section 6.
 

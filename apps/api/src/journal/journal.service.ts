@@ -5,7 +5,7 @@ import {
   type JournalDay,
   type JournalDayInput,
   type JournalEntry,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { toDate, toKey } from "../common/dates";
 

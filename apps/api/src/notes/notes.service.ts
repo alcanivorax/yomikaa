@@ -14,7 +14,7 @@ import {
   type NoteDto,
   type NotePatchInput,
   type SortKey,
-} from "@marginalia/shared";
+} from "@yomikaa/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { toDate, toKey } from "../common/dates";
 

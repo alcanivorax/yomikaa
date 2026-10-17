@@ -1,7 +1,7 @@
-You are building "Marginalia", a personal archive website, as a production app that is an exact visual and behavioral replica of an existing reference build. The result must be indistinguishable from the reference: same fonts, colors, spacing, animations, timings, behavior and responsive layout.
+You are building "Yomikaa", a personal archive website, as a production app that is an exact visual and behavioral replica of an existing reference build. The result must be indistinguishable from the reference: same fonts, colors, spacing, animations, timings, behavior and responsive layout.
 
-Everything you need is in the folder `marginalia-agent-kit/`:
-- `reference/marginalia-reference.html` is a complete working single-file build (it stores data in localStorage). It is the source of truth for everything the user sees and does. If any page and the reference disagree on a value, the reference wins.
+Everything you need is in the folder `yomikaa-agent-kit/`:
+- `reference/yomikaa-reference.html` is a complete working single-file build (it stores data in localStorage). It is the source of truth for everything the user sees and does. If any page and the reference disagree on a value, the reference wins.
 - `00-READ-ME-FIRST.md` is the master brief, module map and build order. Read it fully first.
 - `01` to `10` are one page per area: design system, shell and motion, home, index, reader, write, journal (timed entries), data and storage, responsive/a11y/QA, tickets.
 - `11-stack-and-backend.md` defines the production stack, repository layout, Prisma schema, API contract, authentication, Tailwind rules, env vars, testing and deployment. It overrides any statement in the other pages about localStorage, a verbatim stylesheet or hash routing.
