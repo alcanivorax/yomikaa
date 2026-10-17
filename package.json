@@ -1,27 +1,17 @@
 {
-  "name": "yomikaa",
+  "name": "marginalia",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.4.2",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "dev": "pnpm --parallel --filter @marginalia/web --filter @marginalia/api dev",
+    "build": "pnpm --filter @marginalia/shared build && pnpm --filter @marginalia/web build && pnpm --filter @marginalia/api build",
+    "lint": "pnpm --filter @marginalia/shared lint && pnpm --filter @marginalia/web lint && pnpm --filter @marginalia/api lint",
+    "typecheck": "pnpm --filter @marginalia/shared typecheck && pnpm --filter @marginalia/web typecheck && pnpm --filter @marginalia/api typecheck",
+    "test": "pnpm --filter @marginalia/shared test && pnpm --filter @marginalia/api test",
+    "test:e2e": "pnpm --filter @marginalia/web test:e2e",
+    "db:migrate": "pnpm --filter @marginalia/api db:migrate",
+    "db:seed": "pnpm --filter @marginalia/api db:seed",
+    "db:studio": "pnpm --filter @marginalia/api db:studio"
   },
   "packageManager": "pnpm@11.28.3"
 }

@@ -1,0 +1,96 @@
+// Marginalia Prisma schema — see 11-stack-and-backend.md section 2.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum NoteKind {
+  Essay
+  Snippet
+  Note
+  Link
+}
+
+enum JournalPart {
+  life
+  work
+}
+
+enum TicketStatus {
+  todo
+  prog
+  rev
+  block
+  done
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  title     String
+  kind      NoteKind
+  excerpt   String
+  body      String[]
+  margin    String?
+  url       String?
+  date      DateTime @db.Date
+  isSample  Boolean  @default(false)
+  tags      Tag[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date(sort: Desc), id(sort: Desc)])
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  slug  String @unique
+  notes Note[]
+}
+
+model JournalDay {
+  id        Int            @id @default(autoincrement())
+  ownerId   String         @db.Uuid
+  date      DateTime       @db.Date
+  entries   JournalEntry[]
+  updatedAt DateTime       @updatedAt
+
+  @@unique([ownerId, date])
+}
+
+model JournalEntry {
+  id        Int         @id @default(autoincrement())
+  dayId     Int
+  day       JournalDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  part      JournalPart
+  position  Int
+  startTime String      @default("") @db.VarChar(5)
+  endTime   String      @default("") @db.VarChar(5)
+  text      String      @default("")
+
+  @@index([dayId, part, position])
+}
+
+model Ticket {
+  id        String       @id @db.Uuid
+  ownerId   String       @db.Uuid
+  key       String       @default("")
+  title     String       @default("")
+  note      String       @default("")
+  status    TicketStatus @default(todo)
+  workedOn  DateTime     @db.Date
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([ownerId, createdAt(sort: Desc)])
+}
+
+model Draft {
+  ownerId   String   @id @db.Uuid
+  data      Json
+  updatedAt DateTime @updatedAt
+}
