@@ -14,7 +14,6 @@ import {
   SAMPLE_NOTES,
   type Draft,
   type Journal,
-  type Note,
   type Ticket,
 } from "@marginalia/shared";
 import { AppCtx, type AppValue, type NoteLike, type IndexState, type ShelfTarget } from "@/lib/app-context";
@@ -34,8 +33,8 @@ interface ShellProps {
 
 export function Shell({ initialView, children }: ShellProps) {
   const [cur, setCur] = useState<View>(initialView);
-  const [notes, setNotes] = useState<Note[]>(() =>
-    SAMPLE_NOTES.map((n, i) => ({ ...n, id: i })),
+  const [notes, setNotes] = useState<NoteLike[]>(() =>
+    SAMPLE_NOTES.map((n, i) => ({ ...n, id: i, sample: true })),
   );
   const [journal, setJournal] = useState<Journal>({});
   const [tickets, setTickets] = useState<Ticket[]>([]);

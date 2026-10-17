@@ -11,7 +11,7 @@ import type {
 } from "@marginalia/shared";
 import type { View } from "./view";
 
-export type NoteLike = Omit<Note, "id"> & { id: number };
+export type NoteLike = Note & { sample?: boolean };
 
 export interface IndexState {
   q: string;
@@ -37,7 +37,7 @@ export interface AppValue {
   go: (v: View) => void;
   revealAll: (el: HTMLElement | null) => void;
 
-  notes: Note[];
+  notes: NoteLike[];
   journal: Journal;
   tickets: Ticket[];
   draft: Draft | null;

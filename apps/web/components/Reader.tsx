@@ -6,7 +6,6 @@ import {
   esc,
   pad2,
   readingMinutes,
-  type Note,
 } from "@marginalia/shared";
 import { useApp, type NoteLike } from "@/lib/app-context";
 
@@ -35,7 +34,7 @@ export function Reader({ origin, trigger }: ReaderProps) {
   const prog = useRef<HTMLDivElement | null>(null);
   const wasOpen = useRef(false);
 
-  const resolve = (): Note | NoteLike | null => {
+  const resolve = (): NoteLike | null => {
     if (reader.temp) return reader.temp;
     return notes.find((n) => n.id === reader.id) ?? null;
   };
@@ -62,7 +61,7 @@ export function Reader({ origin, trigger }: ReaderProps) {
       <dl><dt>Filed</dt><dd>${fullDate(n.date)}</dd></dl><dl><dt>Kind</dt><dd>${n.kind}</dd></dl><dl><dt>Reading</dt><dd>${readingMinutes(paras)} min</dd></dl>
       <dl><dt>Shelves</dt><dd><div class="pills">${n.tags.map((t) => `<button class="pill" data-shelf="${esc(t)}">${esc(t)}</button>`).join("")}</div></dd></dl>
       ${n.m ? `<dl class="marg"><dt>In the margin</dt><dd><p>${esc(n.m)}</p></dd></dl>` : ""}
-      ${!isTemp ? `<div><button class="lk" data-edit="${n.id}">Edit this note</button></div>` : ""}</aside>
+      ${!isTemp && !n.sample ? `<div><button class="lk" data-edit="${n.id}">Edit this note</button></div>` : ""}</aside>
       <article><h2 class="rt rv" style="--d:1">${esc(n.title)}</h2><div class="rb rv" style="--d:3">${paras.map((p) => `<p>${esc(p)}</p>`).join("")}</div>${link}
       <nav class="pn" aria-label="Neighbouring notes">${prev ? `<button data-open="${prev.id}"><small>Earlier</small><b>${esc(prev.title)}</b></button>` : "<span></span>"}${next ? `<button data-open="${next.id}"><small>Later</small><b>${esc(next.title)}</b></button>` : "<span></span>"}</nav></article></div>`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
