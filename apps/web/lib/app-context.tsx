@@ -51,8 +51,7 @@ export interface AppValue {
   updateNote: (id: number, patch: Partial<Omit<Note, "id">>) => void;
   saveDraft: (d: Draft | null) => void;
   setDay: (date: string, day: JournalDay | null) => void;
-  setTicket: (t: Ticket) => void;
-  removeTicket: (id: string) => void;
+  setTickets: (list: Ticket[]) => void;
 
   reader: ReaderState;
   openNote: (id: number, temp?: NoteLike | null) => void;

@@ -255,17 +255,7 @@ export function Shell({ initialView, children }: ShellProps) {
           return next;
         });
       },
-      setTicket: (t) => {
-        setTickets((prev) => {
-          const i = prev.findIndex((x) => x.id === t.id);
-          if (i === -1) return [t, ...prev];
-          const copy = prev.slice();
-          copy[i] = t;
-          return copy;
-        });
-      },
-      removeTicket: (id) =>
-        setTickets((prev) => prev.filter((t) => t.id !== id)),
+      setTickets: (list) => setTickets(list),
       reader,
       openNote,
       closeNote: () => setReader((r) => ({ ...r, open: false })),
