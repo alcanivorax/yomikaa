@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { DEV_TOKEN_COOKIE } from "@/lib/api";
+import { DEV_TOKEN_COOKIE, apiBase } from "@/lib/api";
 
 /**
  * Local-development sign-in. The Supabase project is the real auth path; when
@@ -17,8 +17,7 @@ export async function POST() {
     );
   }
 
-  const base = process.env.API_URL ?? "http://localhost:4000/api/v1";
-  const res = await fetch(`${base}/auth/dev-token`, {
+  const res = await fetch(`${apiBase()}/auth/dev-token`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ secret }),

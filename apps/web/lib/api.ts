@@ -40,12 +40,21 @@ const monthSchema = z.object({
   days: z.record(z.string(), journalDaySchema),
 });
 
-function apiBase(): string {
-  const base =
-    typeof window === "undefined"
-      ? process.env.API_URL
-      : process.env.NEXT_PUBLIC_API_URL;
-  return base ?? "http://localhost:4000/api/v1";
+const API_PREFIX = "/api/v1";
+
+export function apiBase(): string {
+  if (typeof window === "undefined") {
+    // Server-side: on Vercel, API_URL is injected by the api service binding
+    // (the service's base URL, no path). Locally it comes from .env.local.
+    const origin = (process.env.API_URL ?? "http://localhost:4000").replace(
+      /\/+$/,
+      "",
+    );
+    return origin + API_PREFIX;
+  }
+  // Browser: same-origin /api/v1, rewritten to the api service by vercel.json.
+  // In plain local dev NEXT_PUBLIC_API_URL points at the API directly.
+  return process.env.NEXT_PUBLIC_API_URL ?? API_PREFIX;
 }
 
 function readCookie(name: string): string | null {
@@ -175,10 +184,7 @@ export const api = {
 /** Server-side, public note fetch for the first paint (see 11 §5). */
 export async function fetchNotesServer(): Promise<NoteDto[] | null> {
   try {
-    const res = await fetch(
-      `${process.env.API_URL ?? "http://localhost:4000/api/v1"}/notes`,
-      { cache: "no-store" },
-    );
+    const res = await fetch(`${apiBase()}/notes`, { cache: "no-store" });
     if (!res.ok) return null;
     return z.array(noteDtoSchema).parse(await res.json());
   } catch {

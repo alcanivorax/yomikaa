@@ -17,7 +17,8 @@ export default async function NotePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const initialNotes = (await fetchNotesServer()) ?? sampleNotes;
+  const showSamples = process.env.SHOW_SAMPLE_NOTES === "true";
+  const initialNotes = (await fetchNotesServer()) ?? (showSamples ? sampleNotes : []);
 
   return (
     <Shell initialView="home" initialNotes={initialNotes} initialNote={Number(id)} />

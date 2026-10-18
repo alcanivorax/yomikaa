@@ -18,7 +18,8 @@ export default async function Page({
   params: Promise<{ view?: string[] }>;
 }) {
   const { view } = await params;
-  const initialNotes = (await fetchNotesServer()) ?? sampleNotes;
+  const showSamples = process.env.SHOW_SAMPLE_NOTES === "true";
+  const initialNotes = (await fetchNotesServer()) ?? (showSamples ? sampleNotes : []);
 
   return <Shell initialView={viewFromSlug(view)} initialNotes={initialNotes} />;
 }
