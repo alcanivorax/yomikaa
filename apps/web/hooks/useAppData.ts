@@ -13,7 +13,7 @@ import {
   type Note,
   type Ticket,
 } from "@yomikaa/shared";
-import { api, clearDevToken, hasDevToken, type Stats } from "@/lib/api";
+import { api, clearSession, hasSession, type Stats } from "@/lib/api";
 import { useAutosave, type SaveState } from "@/hooks/useAutosave";
 import type { NoteLike } from "@/lib/app-context";
 
@@ -51,27 +51,8 @@ export function useAppData(initialNotes: NoteLike[] | null): AppData {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    let unsub: (() => void) | undefined;
-    let cancelled = false;
-    void (async () => {
-      const { getSupabase } = await import("@/lib/supabase");
-      const sb = getSupabase();
-      if (sb) {
-        const { data } = await sb.auth.getSession();
-        if (!cancelled) setIsOwner(!!data.session);
-        const { data: sub } = sb.auth.onAuthStateChange((_e, s) =>
-          setIsOwner(!!s),
-        );
-        unsub = () => sub.subscription.unsubscribe();
-      } else if (!cancelled) {
-        setIsOwner(hasDevToken());
-      }
-      if (!cancelled) setAuthReady(true);
-    })();
-    return () => {
-      cancelled = true;
-      unsub?.();
-    };
+    setIsOwner(hasSession());
+    setAuthReady(true);
   }, []);
 
   const notesQ = useQuery({
@@ -244,11 +225,8 @@ export function useAppData(initialNotes: NoteLike[] | null): AppData {
     [refresh],
   );
 
-  const signOut = useCallback(async () => {
-    const { getSupabase } = await import("@/lib/supabase");
-    const sb = getSupabase();
-    if (sb) await sb.auth.signOut();
-    else clearDevToken();
+  const signOut = useCallback(() => {
+    clearSession();
     qc.clear();
     router.push("/");
     router.refresh();

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { resetMutableData } from "./reset-data";
+import { signIn } from "./session";
 
 const REF_URL =
   "file:///home/vagabond/Project/yomikaa/yomikaa-agent-kit/reference/yomikaa-reference.html";
@@ -182,7 +183,7 @@ test("computed styles match the reference", async ({ browser }) => {
             viewport: size,
           });
           if (kind === "app")
-            await ctx.request.post(APP_URL + "/api/dev-login");
+            await signIn(ctx.request, APP_URL);
           const page = await ctx.newPage();
           await page.goto(kind === "ref" ? REF_URL : APP_URL);
           await page

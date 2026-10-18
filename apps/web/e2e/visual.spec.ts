@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import { resetMutableData } from "./reset-data";
+import { signIn } from "./session";
 
 const REF_URL =
   "file:///home/vagabond/Project/yomikaa/yomikaa-agent-kit/reference/yomikaa-reference.html";
@@ -163,7 +164,7 @@ for (const size of SIZES) {
 
     const refCtx = await browser.newContext({ reducedMotion: "reduce", viewport: size });
     const appCtx = await browser.newContext({ reducedMotion: "reduce", viewport: size });
-    await appCtx.request.post(APP_URL + "/api/dev-login");
+    await signIn(appCtx.request, APP_URL);
 
     const refPage = await refCtx.newPage();
     const appPage = await appCtx.newPage();

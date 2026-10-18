@@ -1,12 +1,12 @@
 import { test, expect, type Browser } from "@playwright/test";
+import { signIn } from "./session";
 
 const WEB = process.env.E2E_WEB_URL ?? "http://localhost:3000";
 const API = process.env.E2E_API_URL ?? "http://localhost:4000/api/v1";
 
 async function ownerPage(browser: Browser) {
   const ctx = await browser.newContext();
-  const res = await ctx.request.post(WEB + "/api/dev-login");
-  expect(res.ok()).toBeTruthy();
+  await signIn(ctx.request, WEB);
   const page = await ctx.newPage();
   return { ctx, page };
 }
@@ -124,7 +124,7 @@ test.describe("owner", () => {
 
   test("reduced motion: reader opens instantly, no curtain", async ({ browser }) => {
     const ctx = await browser.newContext({ reducedMotion: "reduce" });
-    await ctx.request.post(WEB + "/api/dev-login");
+    await signIn(ctx.request, WEB);
     const page = await ctx.newPage();
     await page.goto("/");
     await expect(page.locator("#bigh")).toBeVisible();

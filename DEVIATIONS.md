@@ -25,14 +25,14 @@ behavior) matches the reference exactly.
 
 These are engineering choices forced by the pinned toolchain, not UI changes.
 
-- **Auth fallback for local development.** With no Supabase project configured
-  (`NEXT_PUBLIC_SUPABASE_URL` empty) the browser cannot hold a Supabase session,
-  so `/login`'s `Send link` calls a server-only route `POST /api/dev-login`,
-  which exchanges `AUTH_DEV_SECRET` for the API's HS256 owner token and sets the
-  `mg_dev_token` cookie. Owner detection prefers a Supabase session and falls
-  back to that cookie. Production uses Supabase Auth (email magic link) and never
-  touches this path. `SUPABASE_URL` unset in the API likewise makes `OwnerGuard`
-  verify the same HS256 token instead of JWKS/RS256.
+- **Single-owner username/password auth.** The reference has no auth; this app
+  is private. `POST /api/v1/auth/login` (rate-limited) checks `OWNER_USERNAME`
+  against a scrypt hash (`OWNER_PASSWORD_HASH`, or a plaintext `OWNER_PASSWORD`
+  fallback) in constant time, then mints an HS256 session token whose `sub` is
+  `OWNER_USER_ID`. The web app forwards the form to the same-origin
+  `POST /api/login` route handler, which stores the token in the `mg_session`
+  cookie; `OwnerGuard` verifies the signature, issuer, expiry and that the
+  subject equals `OWNER_USER_ID`. No Supabase Auth, no magic links.
 - **API tests spawn the compiled server.** NestJS 12 is ESM-only and Jest 30
   cannot load `@nestjs/testing` under Node 22, so `apps/api/test/app.e2e.spec.ts`
   launches `node dist/main.js` on a test port and drives it over HTTP with

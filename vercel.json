@@ -22,7 +22,7 @@
   },
   "rewrites": [
     {
-      "source": "/api/dev-login",
+      "source": "/api/login",
       "destination": {
         "service": "web"
       }

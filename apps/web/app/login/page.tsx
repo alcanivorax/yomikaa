@@ -2,11 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseConfigured, getSupabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -15,19 +15,19 @@ export default function LoginPage() {
     if (busy) return;
     setBusy(true);
     try {
-      if (supabaseConfigured) {
-        const sb = getSupabase();
-        const { error } = await sb!.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: window.location.origin + "/" },
-        });
-        setMsg(error ? error.message : "Check your email for the link.");
-      } else {
-        const res = await fetch("/api/dev-login", { method: "POST" });
-        if (!res.ok) throw new Error("Could not sign in.");
-        router.push("/");
-        router.refresh();
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(body?.message ?? "Could not sign in.");
       }
+      router.push("/");
+      router.refresh();
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Could not sign in.");
     } finally {
@@ -56,21 +56,30 @@ export default function LoginPage() {
         <h1 style={{ font: "400 40px/1 var(--disp)", margin: 0 }}>
           Yomikaa
         </h1>
-        <label className="lbl" htmlFor="email">
+        <label className="lbl" htmlFor="username">
           Sign in
         </label>
         <input
           className="megain"
-          id="email"
-          type="email"
-          placeholder="your email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          id="username"
+          type="text"
+          placeholder="your name"
+          autoComplete="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          className="megain"
+          id="password"
+          type="password"
+          placeholder="your password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <div className="steps">
           <button type="submit" disabled={busy}>
-            Send link
+            Sign in
           </button>
         </div>
       </form>

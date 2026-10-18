@@ -13,7 +13,7 @@ import {
   type Ticket,
 } from "@yomikaa/shared";
 
-export const DEV_TOKEN_COOKIE = "mg_dev_token";
+export const SESSION_COOKIE = "mg_session";
 
 export interface Stats {
   notes: number;
@@ -64,16 +64,8 @@ function readCookie(name: string): string | null {
 }
 
 async function getToken(): Promise<string | null> {
-  if (typeof window !== "undefined") {
-    const { getSupabase } = await import("./supabase");
-    const sb = getSupabase();
-    if (sb) {
-      const { data } = await sb.auth.getSession();
-      if (data.session?.access_token) return data.session.access_token;
-    }
-    return readCookie(DEV_TOKEN_COOKIE);
-  }
-  return null;
+  if (typeof window === "undefined") return null;
+  return readCookie(SESSION_COOKIE);
 }
 
 async function request<T>(
@@ -105,13 +97,13 @@ async function request<T>(
   return schema.parse(body);
 }
 
-export function hasDevToken(): boolean {
-  return !!readCookie(DEV_TOKEN_COOKIE);
+export function hasSession(): boolean {
+  return !!readCookie(SESSION_COOKIE);
 }
 
-export function clearDevToken(): void {
+export function clearSession(): void {
   if (typeof document === "undefined") return;
-  document.cookie = `${DEV_TOKEN_COOKIE}=; path=/; max-age=0; samesite=lax`;
+  document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; samesite=lax`;
 }
 
 export const api = {
@@ -174,11 +166,6 @@ export const api = {
       throw e;
     }),
 
-  devToken: (secret: string) =>
-    request("/auth/dev-token", z.object({ token: z.string() }), {
-      method: "POST",
-      body: JSON.stringify({ secret }),
-    }),
 };
 
 /** Server-side, public note fetch for the first paint (see 11 §5). */

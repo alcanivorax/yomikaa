@@ -1,11 +1,11 @@
 import { test, expect, type Browser } from "@playwright/test";
+import { signIn } from "./session";
 
 const WEB = process.env.E2E_WEB_URL ?? "http://localhost:3000";
 
 async function ownerContext(browser: Browser) {
   const ctx = await browser.newContext();
-  const res = await ctx.request.post(WEB + "/api/dev-login");
-  expect(res.ok()).toBeTruthy();
+  await signIn(ctx.request, WEB);
   return ctx;
 }
 

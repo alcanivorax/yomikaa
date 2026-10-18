@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { signIn } from "./session";
 
 const WEB = process.env.E2E_WEB_URL ?? "http://localhost:3000";
 
@@ -49,7 +50,7 @@ test.describe("responsive", () => {
   test("no horizontal scroll across the size matrix", async ({ browser }) => {
     test.setTimeout(240_000);
     const ctx = await browser.newContext({ reducedMotion: "reduce" });
-    await ctx.request.post(WEB + "/api/dev-login");
+    await signIn(ctx.request, WEB);
 
     for (const size of SIZES) {
       for (const view of VIEWS) {
@@ -78,7 +79,7 @@ test.describe("responsive", () => {
       reducedMotion: "reduce",
       viewport: { width: 360, height: 740 },
     });
-    await ctx.request.post(WEB + "/api/dev-login");
+    await signIn(ctx.request, WEB);
     const page = await ctx.newPage();
     await page.goto("/");
     await expect(page.locator("header nav button")).toHaveText([

@@ -11,7 +11,8 @@
     "test:e2e": "pnpm --filter @yomikaa/web test:e2e",
     "db:migrate": "pnpm --filter @yomikaa/api db:migrate",
     "db:seed": "pnpm --filter @yomikaa/api db:seed",
-    "db:studio": "pnpm --filter @yomikaa/api db:studio"
+    "db:studio": "pnpm --filter @yomikaa/api db:studio",
+    "hash:password": "pnpm --filter @yomikaa/api hash:password"
   },
   "packageManager": "pnpm@11.28.3"
 }

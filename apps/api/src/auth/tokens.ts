@@ -1,24 +1,27 @@
-import { createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export interface TokenPayload {
   sub?: string;
   iss?: string;
-  aud?: string;
+  iat?: number;
   exp?: number;
   [key: string]: unknown;
 }
+
+const ISSUER = "yomikaa";
+const TTL_SECONDS = 60 * 60 * 24 * 7;
 
 const b64url = (s: string): Buffer =>
   Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
 
 interface ParsedJwt {
-  header: { alg?: string; kid?: string };
+  header: { alg?: string };
   payload: TokenPayload;
   signingInput: Buffer;
   signature: Buffer;
 }
 
-export function parseJwt(token: string): ParsedJwt {
+function parseJwt(token: string): ParsedJwt {
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Malformed token");
   const [h, p, s] = parts;
@@ -30,79 +33,38 @@ export function parseJwt(token: string): ParsedJwt {
   };
 }
 
-export function verifyDevToken(token: string, secret: string): TokenPayload {
-  const { header, payload, signingInput, signature } = parseJwt(token);
-  if (header.alg !== "HS256") throw new Error("Unexpected algorithm");
-  if (payload.iss !== "yomikaa-dev") throw new Error("Unexpected issuer");
-  const expected = createHmac("sha256", secret).update(signingInput).digest();
-  if (
-    signature.length !== expected.length ||
-    !timingSafeEqual(signature, expected)
-  ) {
-    throw new Error("Bad signature");
-  }
-  return payload;
+function authSecret(): string {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET is not set");
+  return secret;
 }
 
-interface Jwk {
-  kid?: string;
-  kty?: string;
-  [key: string]: unknown;
-}
-
-let jwksCache: { keys: Jwk[]; fetched: number } | null = null;
-
-async function getJwks(supabaseUrl: string): Promise<Jwk[]> {
-  const now = Date.now();
-  if (jwksCache && now - jwksCache.fetched < 10 * 60 * 1000) {
-    return jwksCache.keys;
-  }
-  const res = await fetch(`${supabaseUrl}/auth/v1/.well-known/jwks.json`);
-  if (!res.ok) throw new Error("Failed to fetch JWKS");
-  const body = (await res.json()) as { keys?: Jwk[] };
-  const keys = body.keys ?? [];
-  jwksCache = { keys, fetched: now };
-  return keys;
-}
-
-export async function verifySupabaseToken(
-  token: string,
-  supabaseUrl: string,
-): Promise<TokenPayload> {
-  const { header, payload, signingInput, signature } = parseJwt(token);
-  if (header.alg !== "RS256") throw new Error("Unexpected algorithm");
-  const keys = await getJwks(supabaseUrl);
-  const jwk = keys.find((k) => !header.kid || k.kid === header.kid);
-  if (!jwk) throw new Error("No matching key");
-  const publicKey = createPublicKey({ key: jwk, format: "jwk" });
-  const ok = verify("RSA-SHA256", signingInput, publicKey, signature);
-  if (!ok) throw new Error("Bad signature");
-  if (payload.iss && !String(payload.iss).startsWith(`${supabaseUrl}/auth/v1`)) {
-    throw new Error("Unexpected issuer");
-  }
-  return payload;
-}
-
-export function mintDevToken(secret: string, subject: string): string {
+export function mintToken(subject: string): string {
   const enc = (o: unknown) =>
     Buffer.from(JSON.stringify(o)).toString("base64url");
   const header = enc({ alg: "HS256", typ: "JWT" });
   const now = Math.floor(Date.now() / 1000);
   const payload = enc({
     sub: subject,
-    iss: "yomikaa-dev",
+    iss: ISSUER,
     iat: now,
-    exp: now + 60 * 60 * 24 * 7,
+    exp: now + TTL_SECONDS,
   });
   const input = `${header}.${payload}`;
-  const sig = createHmac("sha256", secret).update(input).digest("base64url");
+  const sig = createHmac("sha256", authSecret()).update(input).digest("base64url");
   return `${input}.${sig}`;
 }
 
-export function verifyToken(token: string): Promise<TokenPayload> | TokenPayload {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  if (supabaseUrl) return verifySupabaseToken(token, supabaseUrl);
-  const secret = process.env.AUTH_DEV_SECRET;
-  if (!secret) throw new Error("No auth configured");
-  return verifyDevToken(token, secret);
+export function verifyToken(token: string): TokenPayload {
+  const { header, payload, signingInput, signature } = parseJwt(token);
+  if (header.alg !== "HS256") throw new Error("Unexpected algorithm");
+  if (payload.iss !== ISSUER) throw new Error("Unexpected issuer");
+  const expected = createHmac("sha256", authSecret()).update(signingInput).digest();
+  if (signature.length !== expected.length || !timingSafeEqual(signature, expected)) {
+    throw new Error("Bad signature");
+  }
+  if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) {
+    throw new Error("Token expired");
+  }
+  return payload;
 }

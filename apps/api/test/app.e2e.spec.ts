@@ -17,7 +17,9 @@ import { PrismaClient } from "../src/generated/prisma/client";
 
 const PORT = 4100;
 const BASE = `http://127.0.0.1:${PORT}/api/v1`;
-const SECRET = process.env.AUTH_DEV_SECRET as string;
+const SECRET = process.env.AUTH_SECRET as string;
+const OWNER_USERNAME = process.env.OWNER_USERNAME as string;
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD as string;
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -56,9 +58,11 @@ beforeAll(async () => {
 
   await waitForHealth();
 
-  const res = await request(BASE).post("/auth/dev-token").send({ secret: SECRET });
+  const res = await request(BASE)
+    .post("/auth/login")
+    .send({ username: OWNER_USERNAME, password: OWNER_PASSWORD });
   if (res.status !== 201 || !res.body.token) {
-    throw new Error(`dev-token failed: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(`login failed: ${res.status} ${JSON.stringify(res.body)}`);
   }
   ownerToken = res.body.token as string;
 }, 40000);
@@ -137,7 +141,7 @@ describe("owner guard", () => {
     const h = enc({ alg: "HS256", typ: "JWT" });
     const p = enc({
       sub: "00000000-0000-0000-0000-000000000000",
-      iss: "yomikaa-dev",
+      iss: "yomikaa",
     });
     const sig = createHmac("sha256", SECRET).update(`${h}.${p}`).digest("base64url");
     await request(BASE)
