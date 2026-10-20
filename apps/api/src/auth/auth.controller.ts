@@ -1,42 +1,61 @@
-import {
-  Body,
-  Controller,
-  NotFoundException,
-  Post,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Body, Controller, Post, UnauthorizedException } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import { credentialsConfigured, verifyCredentials } from "./credentials";
 import { Public } from "./public.decorator";
-import { mintToken } from "./tokens";
+import { SupabaseAuthService, type AuthSession } from "./supabase-auth.service";
 
 interface LoginBody {
-  username?: unknown;
+  email?: unknown;
   password?: unknown;
 }
 
+interface RefreshBody {
+  refresh_token?: unknown;
+}
+
 /**
- * Single-owner username + password sign-in. On success mints an HS256 session
- * token whose subject is OWNER_USER_ID; OwnerGuard accepts nothing else.
- * Disabled (404) unless the owner credentials and OWNER_USER_ID are set.
+ * Single-owner authentication against Supabase Auth. These endpoints are the
+ * only place the Supabase client is used; the browser never talks to Supabase
+ * directly — it calls these through the Next.js BFF, which stores the returned
+ * tokens in httpOnly cookies.
  */
+@Public()
 @Controller("auth")
 export class AuthController {
-  @Public()
+  constructor(private readonly supabase: SupabaseAuthService) {}
+
+  /** Password sign-in. Throttled like the original custom login. */
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("login")
-  async login(@Body() body: LoginBody): Promise<{ token: string }> {
-    const ownerId = process.env.OWNER_USER_ID;
-    if (!ownerId || !credentialsConfigured()) {
-      throw new NotFoundException();
-    }
-
-    const username = typeof body?.username === "string" ? body.username : "";
+  async login(@Body() body: LoginBody): Promise<AuthSession> {
+    const email = typeof body?.email === "string" ? body.email.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
-    if (!(await verifyCredentials(username, password))) {
-      throw new UnauthorizedException("Invalid username or password");
+    if (!email || !password) {
+      throw new UnauthorizedException("Invalid credentials");
     }
+    return this.supabase.login(email, password);
+  }
 
-    return { token: mintToken(ownerId) };
+  /** Exchanges a refresh token for a fresh access token + refresh token. */
+  @Post("refresh")
+  async refresh(@Body() body: RefreshBody): Promise<AuthSession> {
+    const refreshToken =
+      typeof body?.refresh_token === "string" ? body.refresh_token.trim() : "";
+    if (!refreshToken) {
+      throw new UnauthorizedException("Invalid refresh token");
+    }
+    return this.supabase.refresh(refreshToken);
+  }
+
+  /**
+   * Best-effort sign-out. Real logout is enforced by the Next.js BFF clearing
+   * the cookies; this endpoint exists so the BFF has a single place to call and
+   * so a service-role revoke can be added later without changing the contract.
+   */
+  @Post("logout")
+  async logout(@Body() body: RefreshBody): Promise<{ ok: true }> {
+    const refreshToken =
+      typeof body?.refresh_token === "string" ? body.refresh_token.trim() : undefined;
+    await this.supabase.signOut(refreshToken);
+    return { ok: true };
   }
 }

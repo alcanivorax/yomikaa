@@ -9,9 +9,9 @@ behavior) matches the reference exactly.
 1. **Reduced visitor nav.** Visitors see only **Index** and **Random** (plus the
    wordmark); Write, Journal and Tickets are hidden and `/write`, `/journal`,
    `/tickets` redirect home. The footer `N days journaled` is owner-only.
-2. **`/login`.** New unlinked page: a single `megain` email input (placeholder
-   `your email`) and a `.steps`-style `Send link` button, messages in the Write
-   toast style. No other new UI.
+2. **`/login`.** New unlinked page: a `megain` email input (placeholder
+   `your email`), a password input, and a `.steps`-style `Sign in` button,
+   messages in the Write toast style. No other new UI.
 3. **`Not saved` state.** When an autosave request fails, the Write/Journal/
    Tickets save label reads `Not saved` (and retries with backoff) instead of
    silently staying on `saved`.
@@ -25,14 +25,19 @@ behavior) matches the reference exactly.
 
 These are engineering choices forced by the pinned toolchain, not UI changes.
 
-- **Single-owner username/password auth.** The reference has no auth; this app
-  is private. `POST /api/v1/auth/login` (rate-limited) checks `OWNER_USERNAME`
-  against a scrypt hash (`OWNER_PASSWORD_HASH`, or a plaintext `OWNER_PASSWORD`
-  fallback) in constant time, then mints an HS256 session token whose `sub` is
-  `OWNER_USER_ID`. The web app forwards the form to the same-origin
-  `POST /api/login` route handler, which stores the token in the `mg_session`
-  cookie; `OwnerGuard` verifies the signature, issuer, expiry and that the
-  subject equals `OWNER_USER_ID`. No Supabase Auth, no magic links.
+- **Single-owner auth via Supabase Auth.** The reference has no auth; this app
+  is private. Login uses Supabase Auth (email + password). The web app forwards
+  the form to the same-origin `POST /api/login` route handler, which calls the
+  API's rate-limited `POST /api/v1/auth/login` (server-side, via the `API_URL`
+  service binding); the API signs in against Supabase and returns the session,
+  which the route handler stores in httpOnly cookies (`yomikaa-access` /
+  `yomikaa-refresh`). Browser calls to `/api/v1/*` send the cookie same-origin,
+  and `OwnerGuard` verifies the Supabase access token locally (HS256 against
+  `SUPABASE_JWT_SECRET`, or RS256 against the project JWKS) and checks the
+  subject equals `SUPABASE_OWNER_USER_ID`. The DB rows keep using a separate
+  data-scoping id (`OWNER_USER_ID`) so existing data stays visible. The web app
+  never talks to Supabase directly and never sees a token. No service-role key
+  is used anywhere.
 - **API tests spawn the compiled server.** NestJS 12 is ESM-only and Jest 30
   cannot load `@nestjs/testing` under Node 22, so `apps/api/test/app.e2e.spec.ts`
   launches `node dist/main.js` on a test port and drives it over HTTP with

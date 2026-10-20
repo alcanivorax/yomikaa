@@ -28,6 +28,24 @@
       }
     },
     {
+      "source": "/api/session",
+      "destination": {
+        "service": "web"
+      }
+    },
+    {
+      "source": "/api/refresh",
+      "destination": {
+        "service": "web"
+      }
+    },
+    {
+      "source": "/api/logout",
+      "destination": {
+        "service": "web"
+      }
+    },
+    {
       "source": "/api/(.*)",
       "destination": {
         "service": "api"

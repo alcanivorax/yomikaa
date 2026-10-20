@@ -11,8 +11,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@yomikaa/shared": "workspace:*",
     "@tanstack/react-query": "5.104.3",
+    "@yomikaa/shared": "workspace:*",
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",

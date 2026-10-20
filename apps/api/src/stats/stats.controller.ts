@@ -1,7 +1,7 @@
 import { Controller, Get, Req } from "@nestjs/common";
 import type { Request } from "express";
 import { Public } from "../auth/public.decorator";
-import { verifyToken } from "../auth/tokens";
+import { extractAccessToken, verifySupabaseJwt } from "../auth/supabase-jwt";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Controller("stats")
@@ -26,12 +26,14 @@ export class StatsController {
   }
 
   private async ownerFrom(req: Request): Promise<string | undefined> {
-    const header = req.headers.authorization;
-    const expected = process.env.OWNER_USER_ID;
-    if (!header?.startsWith("Bearer ") || !expected) return undefined;
+    const ownerAuthId = process.env.SUPABASE_OWNER_USER_ID;
+    const token = extractAccessToken(req);
+    if (!ownerAuthId || !token) return undefined;
     try {
-      const payload = await verifyToken(header.slice(7).trim());
-      return payload.sub === expected ? expected : undefined;
+      const payload = await verifySupabaseJwt(token);
+      return payload.sub === ownerAuthId
+        ? process.env.OWNER_USER_ID || ownerAuthId
+        : undefined;
     } catch {
       return undefined;
     }

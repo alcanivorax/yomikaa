@@ -1,7 +1,7 @@
 import { expect, type APIRequestContext } from "@playwright/test";
 
 export const OWNER_CREDENTIALS = {
-  username: process.env.E2E_OWNER_USERNAME ?? "owner",
+  email: process.env.E2E_OWNER_EMAIL ?? "owner@example.com",
   password: process.env.E2E_OWNER_PASSWORD ?? "owner",
 };
 

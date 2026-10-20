@@ -14,20 +14,23 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "db:studio": "prisma studio",
-    "hash:password": "node scripts/hash-password.mjs"
+    "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@yomikaa/shared": "workspace:*",
     "@nestjs/common": "12.1.3",
     "@nestjs/core": "12.1.3",
     "@nestjs/platform-express": "12.1.3",
     "@nestjs/throttler": "6.7.1",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "@supabase/supabase-js": "^2.118.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@yomikaa/shared": "workspace:*",
     "dotenv": "^18.0.8",
     "express": "^5.1.0",
     "helmet": "8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^4.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "zod": "4.6.7"

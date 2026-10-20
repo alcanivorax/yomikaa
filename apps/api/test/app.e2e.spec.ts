@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { spawn, type ChildProcess } from "node:child_process";
-import { createHmac } from "node:crypto";
 import path from "node:path";
 import request from "supertest";
+import jwt from "jsonwebtoken";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
@@ -13,13 +13,32 @@ import { PrismaClient } from "../src/generated/prisma/client";
  * on Node 22 (require(esm) in Jest needs Node 24.9+). Booting the built server
  * as a child process keeps the spec-required Jest + supertest stack intact and
  * exercises the real HTTP surface. See DEVIATIONS.md.
+ *
+ * The owner-guard tests mint Supabase-shaped HS256 access tokens locally with
+ * the project JWT secret, so they run without a live Supabase project. The real
+ * password-login endpoint is only exercised when live Supabase credentials are
+ * present (see the "auth login" block); otherwise it is skipped and reported.
  */
 
 const PORT = 4100;
 const BASE = `http://127.0.0.1:${PORT}/api/v1`;
-const SECRET = process.env.AUTH_SECRET as string;
-const OWNER_USERNAME = process.env.OWNER_USERNAME as string;
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD as string;
+
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET as string;
+const OWNER_AUTH_ID = process.env.SUPABASE_OWNER_USER_ID as string;
+
+/** True only when a real Supabase project (not a placeholder) is configured. */
+const supabaseLive = Boolean(
+  process.env.SUPABASE_URL &&
+    !process.env.SUPABASE_URL.includes("your-project") &&
+    process.env.SUPABASE_ANON_KEY &&
+    !process.env.SUPABASE_ANON_KEY.includes("your-anon"),
+);
+
+const mint = (sub: string, expiresIn: string | number = "1h"): string =>
+  jwt.sign({ sub }, JWT_SECRET, {
+    algorithm: "HS256",
+    expiresIn,
+  } as jwt.SignOptions);
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -48,6 +67,11 @@ async function waitForHealth(timeoutMs = 30000): Promise<void> {
 }
 
 beforeAll(async () => {
+  if (!JWT_SECRET || !OWNER_AUTH_ID) {
+    throw new Error(
+      "SUPABASE_JWT_SECRET and SUPABASE_OWNER_USER_ID must be set (see apps/api/.env).",
+    );
+  }
   server = spawn("node", [path.join(__dirname, "..", "dist", "main.js")], {
     cwd: path.join(__dirname, ".."),
     env: { ...process.env, PORT: String(PORT) },
@@ -58,13 +82,7 @@ beforeAll(async () => {
 
   await waitForHealth();
 
-  const res = await request(BASE)
-    .post("/auth/login")
-    .send({ username: OWNER_USERNAME, password: OWNER_PASSWORD });
-  if (res.status !== 201 || !res.body.token) {
-    throw new Error(`login failed: ${res.status} ${JSON.stringify(res.body)}`);
-  }
-  ownerToken = res.body.token as string;
+  ownerToken = mint(OWNER_AUTH_ID);
 }, 40000);
 
 afterAll(async () => {
@@ -135,20 +153,42 @@ describe("owner guard", () => {
     await request(BASE).get("/draft").set({ Authorization: "Bearer a.b.c" }).expect(401);
   });
 
-  it("rejects a valid token for a different subject", async () => {
-    const enc = (o: unknown) =>
-      Buffer.from(JSON.stringify(o)).toString("base64url");
-    const h = enc({ alg: "HS256", typ: "JWT" });
-    const p = enc({
-      sub: "00000000-0000-0000-0000-000000000000",
-      iss: "yomikaa",
-    });
-    const sig = createHmac("sha256", SECRET).update(`${h}.${p}`).digest("base64url");
-    await request(BASE)
-      .get("/draft")
-      .set({ Authorization: `Bearer ${h}.${p}.${sig}` })
-      .expect(403);
+  it("rejects an expired token", async () => {
+    const expired = mint(OWNER_AUTH_ID, -3600);
+    await request(BASE).get("/draft").set({ Authorization: `Bearer ${expired}` }).expect(401);
   });
+
+  it("rejects a valid token for a different subject", async () => {
+    const other = mint("00000000-0000-0000-0000-000000000000");
+    await request(BASE).get("/draft").set({ Authorization: `Bearer ${other}` }).expect(403);
+  });
+});
+
+describe("auth login (Supabase)", () => {
+  if (!supabaseLive) {
+    it.skip("live Supabase project not configured — password login verified only in deployment", () => {});
+    return;
+  }
+
+  it("rejects invalid credentials", async () => {
+    await request(BASE)
+      .post("/auth/login")
+      .send({ email: "nobody@example.com", password: "wrong" })
+      .expect(401);
+  });
+
+  const email = process.env.SUPABASE_OWNER_EMAIL;
+  const password = process.env.SUPABASE_OWNER_PASSWORD;
+  if (email && password) {
+    it("signs in the owner and returns a session", async () => {
+      const res = await request(BASE)
+        .post("/auth/login")
+        .send({ email, password })
+        .expect(201);
+      expect(res.body.access_token).toBeTruthy();
+      expect(res.body.refresh_token).toBeTruthy();
+    });
+  }
 });
 
 describe("notes (owner)", () => {

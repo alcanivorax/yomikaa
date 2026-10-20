@@ -13,7 +13,7 @@ import {
   type Note,
   type Ticket,
 } from "@yomikaa/shared";
-import { api, clearSession, hasSession, type Stats } from "@/lib/api";
+import { api, fetchSession, signOutRequest, type Stats } from "@/lib/api";
 import { useAutosave, type SaveState } from "@/hooks/useAutosave";
 import type { NoteLike } from "@/lib/app-context";
 
@@ -51,8 +51,23 @@ export function useAppData(initialNotes: NoteLike[] | null): AppData {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    setIsOwner(hasSession());
-    setAuthReady(true);
+    let cancelled = false;
+    fetchSession()
+      .then((authenticated) => {
+        if (!cancelled) {
+          setIsOwner(authenticated);
+          setAuthReady(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsOwner(false);
+          setAuthReady(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const notesQ = useQuery({
@@ -226,7 +241,7 @@ export function useAppData(initialNotes: NoteLike[] | null): AppData {
   );
 
   const signOut = useCallback(() => {
-    clearSession();
+    signOutRequest();
     qc.clear();
     router.push("/");
     router.refresh();

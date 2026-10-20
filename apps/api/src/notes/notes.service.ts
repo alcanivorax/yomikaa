@@ -58,7 +58,7 @@ export class NotesService {
   }
 
   private tagSlugs(tags: string[]): string[] {
-    return [...new Set(tags.map(slug).filter(Boolean))];
+    return [...new Set(tags.map(slug).filter(Boolean))].sort();
   }
 
   private async cleanupTags(): Promise<void> {

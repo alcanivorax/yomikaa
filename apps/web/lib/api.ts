@@ -13,8 +13,6 @@ import {
   type Ticket,
 } from "@yomikaa/shared";
 
-export const SESSION_COOKIE = "mg_session";
-
 export interface Stats {
   notes: number;
   journalDays?: number;
@@ -52,32 +50,20 @@ export function apiBase(): string {
     );
     return origin + API_PREFIX;
   }
-  // Browser: same-origin /api/v1, rewritten to the api service by vercel.json.
-  // In plain local dev NEXT_PUBLIC_API_URL points at the API directly.
-  return process.env.NEXT_PUBLIC_API_URL ?? API_PREFIX;
+  // Browser: same-origin /api/v1. On Vercel vercel.json rewrites it to the api
+  // service; locally next.config.ts proxies it to the API. The session lives in
+  // httpOnly cookies, so no Authorization header is needed.
+  return API_PREFIX;
 }
 
-function readCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function getToken(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-  return readCookie(SESSION_COOKIE);
-}
-
-async function request<T>(
+async function rawFetch<T>(
   path: string,
   schema: z.ZodType<T>,
   init: RequestInit = {},
 ): Promise<T> {
-  const token = await getToken();
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("content-type"))
     headers.set("content-type", "application/json");
-  if (token) headers.set("authorization", `Bearer ${token}`);
 
   const res = await fetch(apiBase() + path, {
     ...init,
@@ -97,13 +83,58 @@ async function request<T>(
   return schema.parse(body);
 }
 
-export function hasSession(): boolean {
-  return !!readCookie(SESSION_COOKIE);
+async function refreshSession(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/refresh", { method: "POST", cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
-export function clearSession(): void {
-  if (typeof document === "undefined") return;
-  document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; samesite=lax`;
+async function request<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  init: RequestInit = {},
+): Promise<T> {
+  try {
+    return await rawFetch(path, schema, init);
+  } catch (e) {
+    // On 401 (expired access token), silently refresh once and retry.
+    if (
+      e instanceof ApiError &&
+      e.status === 401 &&
+      typeof window !== "undefined"
+    ) {
+      if (await refreshSession()) {
+        return rawFetch(path, schema, init);
+      }
+    }
+    throw e;
+  }
+}
+
+/** Server-aware session probe used to restore owner UI state on load. */
+export async function fetchSession(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch("/api/session", { cache: "no-store" });
+    if (!res.ok) return false;
+    const body = (await res.json()) as { authenticated?: boolean };
+    return body.authenticated === true;
+  } catch {
+    return false;
+  }
+}
+
+/** Signs out server-side (clears cookies) and reports success. */
+export async function signOutRequest(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    await fetch("/api/logout", { method: "POST", cache: "no-store" });
+  } catch {
+    /* ignore — cookies are cleared regardless */
+  }
 }
 
 export const api = {
@@ -165,7 +196,6 @@ export const api = {
       if (e instanceof ApiError && e.status === 204) return null;
       throw e;
     }),
-
 };
 
 /** Server-side, public note fetch for the first paint (see 11 §5). */

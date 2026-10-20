@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -18,7 +18,7 @@ export default function LoginPage() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as
@@ -56,17 +56,17 @@ export default function LoginPage() {
         <h1 style={{ font: "400 40px/1 var(--disp)", margin: 0 }}>
           Yomikaa
         </h1>
-        <label className="lbl" htmlFor="username">
+        <label className="lbl" htmlFor="email">
           Sign in
         </label>
         <input
           className="megain"
-          id="username"
-          type="text"
-          placeholder="your name"
-          autoComplete="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          id="email"
+          type="email"
+          placeholder="your email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
         <input
           className="megain"
