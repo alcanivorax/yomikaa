@@ -35,6 +35,9 @@ export async function POST(req: Request) {
     );
   }
   if (!result.ok || !result.session) {
+    console.error("Auth API failed", {
+      status: result.status,
+    });
     return NextResponse.json(
       { message: "Invalid email or password." },
       { status: 401 },
